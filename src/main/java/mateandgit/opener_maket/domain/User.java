@@ -1,16 +1,21 @@
 package mateandgit.opener_maket.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import mateandgit.opener_maket.dto.SingUpRequest;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.math.BigDecimal.ZERO;
+
 @Entity
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Builder
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -26,12 +31,18 @@ public class User {
 
     private BigDecimal cash;
 
-    @Embedded
-    private Address address;
-
     @OneToMany(mappedBy = "user")
     private List<Order> orders = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     private List<SellItem> items = new ArrayList<>();
+
+    public static User createUser(SingUpRequest request) {
+
+        return User.builder()
+                .email(request.email())
+                .password(request.password())
+                .cash(ZERO)
+                .build();
+    }
 }

@@ -8,13 +8,13 @@ services:
       MYSQL_DATABASE: opener-maket
       MYSQL_ROOT_PASSWORD: password
     ports:
-      - "3306:3306"
+      - "3307:3306"
 
   # 스프링 부트 애플리케이션 서비스
   app:
     build: .
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - db
     environment:
