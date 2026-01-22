@@ -1,11 +1,15 @@
 package mateandgit.opener_maket.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import mateandgit.opener_maket.dto.AddItemRequest;
+import mateandgit.opener_maket.exception.NotEnoughStockException;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor
+@Getter
 public class SellItem {
 
     @Id
@@ -23,4 +27,27 @@ public class SellItem {
 
     private int price;
     private int stockQuantity;
+
+    public static SellItem createSellItem(AddItemRequest request, User user, Item item) {
+        return SellItem.builder()
+                .user(user)
+                .item(item)
+                .price(request.price())
+                .stockQuantity(request.stockQuantity())
+                .build();
+    }
+
+    public void addStock(int quantity) {
+        this.stockQuantity += quantity;
+    }
+
+    public void removeStock(int quantity) {
+        int restStock = this.stockQuantity = quantity;
+        if (restStock < 0) throw  new NotEnoughStockException("need more stock");
+        this.stockQuantity = restStock;
+    }
+
+    public void setUser(User user) {
+        this.user.getItems().add(this);
+    }
 }

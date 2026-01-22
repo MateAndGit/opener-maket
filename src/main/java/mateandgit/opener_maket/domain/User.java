@@ -31,9 +31,11 @@ public class User {
 
     private BigDecimal cash;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
     private List<Order> orders = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
     private List<SellItem> items = new ArrayList<>();
 

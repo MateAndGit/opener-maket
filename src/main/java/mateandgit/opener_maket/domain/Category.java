@@ -1,14 +1,17 @@
 package mateandgit.opener_maket.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import mateandgit.opener_maket.domain.status.CategoryStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Builder
+@AllArgsConstructor
 public class Category {
 
     @Id
@@ -16,15 +19,18 @@ public class Category {
     @Column(name = "category_id")
     private Long id;
 
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private CategoryStatus categoryStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;
 
+    @Builder.Default
     @OneToMany(mappedBy = "parent")
     private List<Category> child = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "category")
     private List<Item> items = new ArrayList<>();
 
