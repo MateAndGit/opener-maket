@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  # 데이터베이스 서비스
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: opener-maket
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+
+  # 스프링 부트 애플리케이션 서비스
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/opener-maket
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
