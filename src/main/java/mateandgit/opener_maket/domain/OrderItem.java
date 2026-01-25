@@ -1,11 +1,15 @@
 package mateandgit.opener_maket.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
+@Builder
+@AllArgsConstructor
 public class OrderItem {
 
     @Id
@@ -18,9 +22,22 @@ public class OrderItem {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id")
-    private Item item;
+    @JoinColumn(name = "sell_item_id")
+    private SellItem sellItem;
 
-    private int orderPrice;
+    private BigDecimal orderPrice;
+
     private int count;
+
+    public void assignOrder(Order order) {
+        this.order = order;
+    }
+
+    public static OrderItem createOrderItem(SellItem sellItem, int count) {
+        return OrderItem.builder()
+                .sellItem(sellItem)
+                .orderPrice(sellItem.getPrice())
+                .count(count)
+                .build();
+    }
 }

@@ -2,8 +2,13 @@ package mateandgit.opener_maket.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import mateandgit.opener_maket.domain.status.DealStatus;
 import mateandgit.opener_maket.dto.AddItemRequest;
 import mateandgit.opener_maket.exception.NotEnoughStockException;
+
+import java.math.BigDecimal;
+
+import static mateandgit.opener_maket.domain.status.DealStatus.PENDING;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,7 +30,7 @@ public class SellItem {
     @JoinColumn(name = "item_id")
     private Item item;
 
-    private int price;
+    private BigDecimal price;
     private int stockQuantity;
 
     public static SellItem createSellItem(AddItemRequest request, User user, Item item) {
@@ -42,7 +47,7 @@ public class SellItem {
     }
 
     public void removeStock(int quantity) {
-        int restStock = this.stockQuantity = quantity;
+        int restStock = this.stockQuantity - quantity;
         if (restStock < 0) throw  new NotEnoughStockException("need more stock");
         this.stockQuantity = restStock;
     }

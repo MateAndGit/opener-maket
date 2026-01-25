@@ -16,6 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 import static mateandgit.opener_maket.domain.status.CategoryStatus.BOOK;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,7 +67,7 @@ class ItemServiceTest {
                 BOOK,
                 "해리포터",
                 "마법사의 돌 버전입니다.",
-                1000,
+                new BigDecimal("2000"),
                 50
 
         );

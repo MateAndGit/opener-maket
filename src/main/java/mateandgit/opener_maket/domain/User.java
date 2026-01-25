@@ -29,7 +29,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private BigDecimal cash;
+    @Builder.Default
+    private BigDecimal cash = BigDecimal.ZERO;
 
     @Builder.Default
     @OneToMany(mappedBy = "user")
@@ -47,4 +48,19 @@ public class User {
                 .cash(ZERO)
                 .build();
     }
+
+    public void addCash(BigDecimal cash) {
+        if (cash.compareTo(ZERO) <= 0) {
+            throw new IllegalArgumentException("cash must be greater than zero");
+        }
+        this.cash = this.cash.add(cash);
+    }
+
+    public void removeCash(BigDecimal totalAmount) {
+        if (this.cash.compareTo(totalAmount) <= 0) {
+            throw new IllegalArgumentException("cash is not enough");
+        }
+        this.cash = this.cash.subtract(totalAmount);
+    }
+
 }
