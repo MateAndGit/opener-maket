@@ -8,7 +8,8 @@ import mateandgit.opener_maket.exception.NotEnoughStockException;
 
 import java.math.BigDecimal;
 
-import static mateandgit.opener_maket.domain.status.DealStatus.PENDING;
+import static mateandgit.opener_maket.domain.status.DealStatus.SALE;
+import static mateandgit.opener_maket.domain.status.DealStatus.SOLD_OUT;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -31,7 +32,11 @@ public class SellItem {
     private Item item;
 
     private BigDecimal price;
+
     private int stockQuantity;
+
+    @Enumerated(EnumType.STRING)
+    private DealStatus dealStatus;
 
     public static SellItem createSellItem(AddItemRequest request, User user, Item item) {
         return SellItem.builder()
@@ -39,6 +44,7 @@ public class SellItem {
                 .item(item)
                 .price(request.price())
                 .stockQuantity(request.stockQuantity())
+                .dealStatus(SALE)
                 .build();
     }
 
@@ -48,8 +54,15 @@ public class SellItem {
 
     public void removeStock(int quantity) {
         int restStock = this.stockQuantity - quantity;
-        if (restStock < 0) throw  new NotEnoughStockException("need more stock");
+        if (restStock < 0) {
+            updateStatus(SOLD_OUT);
+            throw  new NotEnoughStockException("need more stock");
+        }
         this.stockQuantity = restStock;
+    }
+
+    private void updateStatus(DealStatus dealStatus) {
+        this.dealStatus = dealStatus;
     }
 
     public void setUser(User user) {

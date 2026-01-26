@@ -33,6 +33,9 @@ public class User {
     private BigDecimal cash = BigDecimal.ZERO;
 
     @Builder.Default
+    private BigDecimal point = BigDecimal.ZERO;
+
+    @Builder.Default
     @OneToMany(mappedBy = "user")
     private List<Order> orders = new ArrayList<>();
 
@@ -45,22 +48,34 @@ public class User {
         return User.builder()
                 .email(request.email())
                 .password(request.password())
-                .cash(ZERO)
                 .build();
     }
 
-    public void addCash(BigDecimal cash) {
-        if (cash.compareTo(ZERO) <= 0) {
-            throw new IllegalArgumentException("cash must be greater than zero");
+    // --- Cash Management ---
+    public void depositCash(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Deposit amount must be positive");
         }
-        this.cash = this.cash.add(cash);
+        this.cash = this.cash.add(amount);
     }
 
-    public void removeCash(BigDecimal totalAmount) {
-        if (this.cash.compareTo(totalAmount) <= 0) {
-            throw new IllegalArgumentException("cash is not enough");
+    public void withdrawCash(BigDecimal amount) {
+        if (this.cash.compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Insufficient cash balance");
         }
-        this.cash = this.cash.subtract(totalAmount);
+        this.cash = this.cash.subtract(amount);
     }
 
+    // --- Point Management ---
+    public void earnPoint(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) return;
+        this.point = this.point.add(amount);
+    }
+
+    public void deductPoint(BigDecimal amount) {
+        if (this.point.compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Insufficient point balance");
+        }
+        this.point = this.point.subtract(amount);
+    }
 }
