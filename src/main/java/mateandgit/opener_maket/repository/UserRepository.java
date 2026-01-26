@@ -1,4 +1,4 @@
-package mateandgit.opener_maket.repsoitory;
+package mateandgit.opener_maket.repository;
 
 import mateandgit.opener_maket.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;

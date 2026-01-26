@@ -9,7 +9,8 @@ public record OrderRequest(
 
         String email,
         List<OrderItemRequest> orderItems,
-        BigDecimal totalPrice
+        BigDecimal totalPrice,
+        BigDecimal point
 
 ) {
 }

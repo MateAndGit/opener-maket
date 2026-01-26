@@ -3,7 +3,7 @@ package mateandgit.opener_maket.service;
 import lombok.RequiredArgsConstructor;
 import mateandgit.opener_maket.domain.User;
 import mateandgit.opener_maket.dto.SingUpRequest;
-import mateandgit.opener_maket.repsoitory.UserRepository;
+import mateandgit.opener_maket.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

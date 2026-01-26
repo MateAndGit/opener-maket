@@ -1,4 +1,4 @@
-package mateandgit.opener_maket.repsoitory;
+package mateandgit.opener_maket.repository;
 
 import mateandgit.opener_maket.domain.Category;
 import mateandgit.opener_maket.domain.status.CategoryStatus;

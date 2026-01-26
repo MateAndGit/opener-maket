@@ -12,3 +12,7 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+
+  threads:
+    virtual:
+      enabled: true

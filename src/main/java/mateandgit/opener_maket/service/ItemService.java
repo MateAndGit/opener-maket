@@ -6,10 +6,10 @@ import mateandgit.opener_maket.domain.Item;
 import mateandgit.opener_maket.domain.SellItem;
 import mateandgit.opener_maket.domain.User;
 import mateandgit.opener_maket.dto.AddItemRequest;
-import mateandgit.opener_maket.repsoitory.CategoryRepository;
-import mateandgit.opener_maket.repsoitory.ItemRepository;
-import mateandgit.opener_maket.repsoitory.SellItemRepository;
-import mateandgit.opener_maket.repsoitory.UserRepository;
+import mateandgit.opener_maket.repository.CategoryRepository;
+import mateandgit.opener_maket.repository.ItemRepository;
+import mateandgit.opener_maket.repository.SellItemRepository;
+import mateandgit.opener_maket.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -2,7 +2,7 @@ package mateandgit.opener_maket.service;
 
 import mateandgit.opener_maket.domain.User;
 import mateandgit.opener_maket.dto.SingUpRequest;
-import mateandgit.opener_maket.repsoitory.UserRepository;
+import mateandgit.opener_maket.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

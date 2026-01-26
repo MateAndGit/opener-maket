@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import mateandgit.opener_maket.domain.status.OrderStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,10 @@ public class Order {
 
     private LocalDateTime orderDate;
 
+    private BigDecimal totalAmount;         // 상품 총 합계 금액
+    private BigDecimal usedPoint;           // 이 주문에서 사용한 포인트
+    private BigDecimal actualPaymentAmount; // 실제 현금(Cash) 결제 금액
+
     @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -41,11 +46,14 @@ public class Order {
         orderItem.assignOrder(this);
     }
 
-    public static Order createOrder(User user, List<OrderItem> orderItems) {
+    public static Order createOrder(User user, List<OrderItem> orderItems, BigDecimal totalAmount, BigDecimal usedPoint) {
         Order order = Order.builder()
                 .user(user)
                 .status(PAYMENT_COMPLETED)
                 .orderDate(LocalDateTime.now())
+                .totalAmount(totalAmount)
+                .usedPoint(usedPoint)
+                .actualPaymentAmount(totalAmount.subtract(usedPoint)) // (총액 - 포인트)
                 .build();
 
         for (OrderItem orderItem : orderItems) {
