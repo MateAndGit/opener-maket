@@ -1,17 +1,27 @@
-## Step 2. Enhancing Purchase Functionality
+## Step 3: Product Search & Review System Implementation
 
-### Implementation Details
+### 1. Requirements
+- **Search Functionality**:
+  - Minimum keyword length: 2 characters.
+  - Search target: Product names containing the keyword (Partial match).
+- **Sorting Criteria**:
+  - Most Purchased (Sales Volume)
+  - Highest Rating (Review Score)
+  - Price: Low to High / High to Low
+  - Latest (Newest arrival)
+- **Review System**:
+  - Rating scale: 1 to 5 stars.
+  - Restriction: Only users who have purchased the specific product can write a review.
 
-- **Robust Purchase Process**: Strengthen the ordering flow with the following mandatory steps:
-    - **Balance Deduction**: Deduct the total amount from the buyer's virtual cash.
-    - **Inventory Management**: Decrease stock by 1. Unlike Step 1, purchases must fail if stock is zero, and the item status must change to `SOLD_OUT`.
-    - **Reward Points**: Credit 2.5% of the payment amount as reward points.
-- **Point Usage**:
-    - Buyers can choose to spend points during purchase.
-    - The specific amount of points to use must be determined by the user (Minimum usage: 1 Point).
+### 2. Performance Optimization Goals
+The core focus of this step is "Scalability." As data grows, naive implementations lead to significant performance degradation.
 
-### Programming Requirements
+- **Data Seeding**: Generate 10,000 to 100,000 dummy records for products and reviews.
+- **Benchmark Comparison**:
+  - Compare **Naive Implementation** (Full Table Scan, real-time AVG calculation) vs. **Optimized Implementation** (Indexing, Denormalization).
+  - Measure response times for each sorting criteria under heavy data load.
 
-- **System Architecture**: Design the sequence of balance deduction, stock updates, and point accrual.
-- **Error Recovery**: Define how the system should recover or rollback if a specific step in the process fails.
-- **Logical Gap Analysis**: Identify and resolve the logical inconsistency between Step 1 and Step 2 using provided hints. (Hint: Think about concurrency and data integrity).
+### 3. Key Technical Considerations
+- **Indexing Strategy**: How to apply indexes to multi-column sorting (Composite Indexes).
+- **Denormalization**: Maintaining an `average_rating` or `review_count` field in the `SellItem` entity to avoid expensive JOIN and AGGREGATE operations during search.
+- **Query DSL/Criteria API**: Implementing dynamic sorting and filtering efficiently in Java.

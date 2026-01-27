@@ -12,6 +12,9 @@ import static mateandgit.opener_maket.domain.status.DealStatus.SALE;
 import static mateandgit.opener_maket.domain.status.DealStatus.SOLD_OUT;
 
 @Entity
+//@Table(name = "sell_item", indexes = {
+//        @Index(name = "idx_total_sales", columnList = "total_sales")
+//})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
@@ -37,6 +40,18 @@ public class SellItem {
 
     @Enumerated(EnumType.STRING)
     private DealStatus dealStatus;
+
+    @Builder.Default
+    @Column(name = "average_rating")
+    private Double averageRating = 0.0;
+
+    @Builder.Default
+    @Column(name = "total_rating_count")
+    private Integer totalRatingCount = 0;
+
+    @Builder.Default
+    @Column(name = "total_sales")
+    private Integer totalSales = 0;
 
     public static SellItem createSellItem(AddItemRequest request, User user, Item item) {
         return SellItem.builder()
@@ -67,5 +82,12 @@ public class SellItem {
 
     public void setUser(User user) {
         this.user.getItems().add(this);
+    }
+
+    public void applyNewRating(int newRating) {
+        // 새로운 평균 = (기존 평균 * 기존 참여수 + 새 점수) / (기존 참여수 + 1)
+        double totalScore = (this.averageRating * this.totalRatingCount) + newRating;
+        this.totalRatingCount++;
+        this.averageRating = totalScore / this.totalRatingCount;
     }
 }

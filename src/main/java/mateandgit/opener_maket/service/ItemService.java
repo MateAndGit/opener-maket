@@ -6,12 +6,12 @@ import mateandgit.opener_maket.domain.Item;
 import mateandgit.opener_maket.domain.SellItem;
 import mateandgit.opener_maket.domain.User;
 import mateandgit.opener_maket.dto.AddItemRequest;
-import mateandgit.opener_maket.repository.CategoryRepository;
-import mateandgit.opener_maket.repository.ItemRepository;
-import mateandgit.opener_maket.repository.SellItemRepository;
-import mateandgit.opener_maket.repository.UserRepository;
+import mateandgit.opener_maket.dto.ItemResponse;
+import mateandgit.opener_maket.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +21,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final SellItemRepository sellItemRepository;
+    private final SellItemRepositoryCustom sellItemRepositoryCustom;
     private final CategoryRepository categoryRepository;
 
     public Long addItem(AddItemRequest request) {
@@ -42,4 +43,15 @@ public class ItemService {
         return sellItem.getId();
     }
 
+    public List<ItemResponse> searchItems(String keyword, String sortBy) {
+        if (keyword == null || keyword.trim().length() < 2) {
+            throw new IllegalArgumentException("검색어는 2글자 이상이어야 합니다.");
+        }
+
+        List<SellItem> results = sellItemRepositoryCustom.searchProducts(keyword, sortBy);
+
+        return results.stream()
+                .map(ItemResponse::from)
+                .toList();
+    }
 }
