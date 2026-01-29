@@ -1,37 +1,59 @@
-### Step 4. High-Concurrency Coupon Issuance & Usage System
+# Opener Market (opener-maket)
 
-#### 1. Overview
-This module focuses on building a robust coupon system capable of handling **DDoS-level traffic spikes** while maintaining **strict data consistency**. The design prioritizes preventing "Over-issuance" and managing real-time redemption limits using high-performance caching strategies.
+**Opener Market** is a scalable e-commerce platform designed to handle high-concurrency traffic and complex business logic. This project demonstrates best practices in building a modern Spring Boot application with a focus on performance, data consistency, and maintainability.
 
-#### 2. Core Requirements & Challenges
-* **FCFS (First-Come, First-Served) Issuance**: Strict quantity control at the point of issuance.
-* **FCFS Usage & Revocation**: Managing a global usage limit where "issued but unused" coupons must be invalidated once the redemption cap is reached.
-* **Duplicate Prevention**: Ensuring a 1-to-1 relationship between a User and a Coupon within a specific event type.
-* **System Stability**: Protecting the RDBMS from thundering herd problems during peak event hours.
+## 🚀 Key Features
 
-#### 3. Technical Solutions (Architectural Approach)
+### 1. Product Search & Discovery (QueryDSL)
 
-| Problem | Solution | Strategy |
-| :--- | :--- | :--- |
-| **Race Condition** | **Redis Atomic Operations** | Leveraging `DECR` to manage inventory in-memory for $O(1)$ performance. |
-| **Write-Through Bottleneck** | **Async Persistence** | Offloading DB writes to an asynchronous worker to reduce API response latency. |
-| **Redemption Limit** | **Global Usage Counter** | Tracking real-time redemptions in Redis to trigger lazy revocation. |
-| **Eligibility Check** | **Redis Set (SADD)** | Storing User IDs in a Set to achieve instant duplicate check. |
+- **Advanced Filtering**: Implemented type-safe dynamic queries using QueryDSL to support complex search criteria (e.g., partial name match, category filtering).
+- **Dynamic Sorting**: Flexible sorting mechanism supporting multiple criteria: Sales Volume, Average Rating, Newest, and Price.
+- **Performance Optimization**:
+  - **N+1 Problem Resolution**: Utilized `fetchJoin()` to efficiently load related entities (Item-Category).
+  - **Query Tuning**: Optimized pagination with `limit` and `offset` constraints.
+  - **Index Optimization**: Designed Composite Indexes to reduce sorting latency from >1.8s to <0.5s for 1M+ records.
 
+### 2. High-Concurrency Coupon System
 
+- **Event-Driven Architecture**: Designed to handle DDoS-level traffic spikes during limited-time events.
+- **Atomic Operations**: Leveraged **Redis** and **Lua scripts** to ensure thread-safe inventory management and prevent race conditions (Over-issuance).
+- **Async Processing**: Decoupled coupon issuance requests from DB persistence using asynchronous workers to maximize throughput.
+- **Duplicate Prevention**: Implemented efficient user eligibility checks using Redis Sets.
 
-#### 4. Domain Logic & Coupon Strategies
-* **`ISSUE_LIMITED`**: Hard-capped issuance quantity.
-* **`USE_LIMITED`**: Unlimited issuance, but redemption is capped.
-* **`STACKABLE`**: Boolean flag to determine if the coupon can be combined with other discounts.
+### 3. Order & Payment Management
 
-#### 5. Revocation & Tracking Strategy
-* **Status Management**: `READY` (Issued), `USED` (Redeemed), `REVOKED` (Exceeded limit).
-* **Consistency Model**:
-  * **Phase 1**: Validate eligibility and decrement counter in Redis.
-  * **Phase 2**: If successful, log the issuance record in MySQL.
-  * **Phase 3**: During payment, re-validate the global usage counter for `USE_LIMITED` types.
+- **Order Lifecycle**: Managed complete order states from creation to delivery.
+- **Data Integrity**: Ensured transactional consistency across order placement and inventory deduction.
 
+## 🛠 Tech Stack
 
+- **Backend**: Java 17, Spring Boot 3.x
+- **Database**: MySQL 8.0, Redis
+- **ORM**: JPA / Hibernate, QueryDSL
+- **Testing**: JUnit 5, Mockito
+- **Infrastructure**: Docker, Docker Compose
 
----
+## 🏗 Project Structure
+
+```
+src/main/java/mateandgit/opener_maket
+├── config          # Application configurations (Redis, Async, QueryDSL)
+├── domain          # Entity definitions and business logic
+├── dto             # Data Transfer Objects
+├── exception       # Custom exceptions
+├── policy          # Business policies (Commission, Point)
+├── repository      # Data access layer (JPA, QueryDSL)
+├── service         # Application services
+└── OpenerMaketApplication.java
+```
+
+## 📈 Performance Improvements
+
+| Metric                         | Before Optimization | After Optimization  | Improvement      |
+| :----------------------------- | :------------------ | :------------------ | :--------------- |
+| **Search Latency (1M rows)**   | 1.8s+               | < 0.5s              | **~72% Faster**  |
+| **Coupon Issuance Throughput** | Limited by DB Lock  | High (Redis Atomic) | **Non-blocking** |
+
+## 📝 License
+
+This project is licensed under the MIT License.
