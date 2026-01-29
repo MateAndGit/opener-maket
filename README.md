@@ -27,7 +27,7 @@
 
 ## 🛠 Tech Stack
 
-- **Backend**: Java 17, Spring Boot 3.x
+- **Backend**: Java 21, Spring Boot 3.x
 - **Database**: MySQL 8.0, Redis
 - **ORM**: JPA / Hibernate, QueryDSL
 - **Testing**: JUnit 5, Mockito
