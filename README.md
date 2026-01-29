@@ -1,27 +1,37 @@
-## Step 3: Product Search & Review System Implementation
+### Step 4. High-Concurrency Coupon Issuance & Usage System
 
-### 1. Requirements
-- **Search Functionality**:
-  - Minimum keyword length: 2 characters.
-  - Search target: Product names containing the keyword (Partial match).
-- **Sorting Criteria**:
-  - Most Purchased (Sales Volume)
-  - Highest Rating (Review Score)
-  - Price: Low to High / High to Low
-  - Latest (Newest arrival)
-- **Review System**:
-  - Rating scale: 1 to 5 stars.
-  - Restriction: Only users who have purchased the specific product can write a review.
+#### 1. Overview
+This module focuses on building a robust coupon system capable of handling **DDoS-level traffic spikes** while maintaining **strict data consistency**. The design prioritizes preventing "Over-issuance" and managing real-time redemption limits using high-performance caching strategies.
 
-### 2. Performance Optimization Goals
-The core focus of this step is "Scalability." As data grows, naive implementations lead to significant performance degradation.
+#### 2. Core Requirements & Challenges
+* **FCFS (First-Come, First-Served) Issuance**: Strict quantity control at the point of issuance.
+* **FCFS Usage & Revocation**: Managing a global usage limit where "issued but unused" coupons must be invalidated once the redemption cap is reached.
+* **Duplicate Prevention**: Ensuring a 1-to-1 relationship between a User and a Coupon within a specific event type.
+* **System Stability**: Protecting the RDBMS from thundering herd problems during peak event hours.
 
-- **Data Seeding**: Generate 10,000 to 100,000 dummy records for products and reviews.
-- **Benchmark Comparison**:
-  - Compare **Naive Implementation** (Full Table Scan, real-time AVG calculation) vs. **Optimized Implementation** (Indexing, Denormalization).
-  - Measure response times for each sorting criteria under heavy data load.
+#### 3. Technical Solutions (Architectural Approach)
 
-### 3. Key Technical Considerations
-- **Indexing Strategy**: How to apply indexes to multi-column sorting (Composite Indexes).
-- **Denormalization**: Maintaining an `average_rating` or `review_count` field in the `SellItem` entity to avoid expensive JOIN and AGGREGATE operations during search.
-- **Query DSL/Criteria API**: Implementing dynamic sorting and filtering efficiently in Java.
+| Problem | Solution | Strategy |
+| :--- | :--- | :--- |
+| **Race Condition** | **Redis Atomic Operations** | Leveraging `DECR` to manage inventory in-memory for $O(1)$ performance. |
+| **Write-Through Bottleneck** | **Async Persistence** | Offloading DB writes to an asynchronous worker to reduce API response latency. |
+| **Redemption Limit** | **Global Usage Counter** | Tracking real-time redemptions in Redis to trigger lazy revocation. |
+| **Eligibility Check** | **Redis Set (SADD)** | Storing User IDs in a Set to achieve instant duplicate check. |
+
+
+
+#### 4. Domain Logic & Coupon Strategies
+* **`ISSUE_LIMITED`**: Hard-capped issuance quantity.
+* **`USE_LIMITED`**: Unlimited issuance, but redemption is capped.
+* **`STACKABLE`**: Boolean flag to determine if the coupon can be combined with other discounts.
+
+#### 5. Revocation & Tracking Strategy
+* **Status Management**: `READY` (Issued), `USED` (Redeemed), `REVOKED` (Exceeded limit).
+* **Consistency Model**:
+  * **Phase 1**: Validate eligibility and decrement counter in Redis.
+  * **Phase 2**: If successful, log the issuance record in MySQL.
+  * **Phase 3**: During payment, re-validate the global usage counter for `USE_LIMITED` types.
+
+
+
+---
