@@ -33,38 +33,38 @@ class ItemSearchPerformanceTest {
 
     @BeforeEach
     void setUp() {
-        // 모든 테스트 실행 전에 딱 한 번씩 실행됨
+        // Executed exactly once before all tests
         jdbcTemplate.execute("INSERT INTO category (category_id, category_status) VALUES (1, 'FOOD')");
         jdbcTemplate.execute("INSERT INTO users (user_id, email, password, cash, point) VALUES (1, 'seller@test.com', '1234', 0, 0)");
     }
 
     @Test
-    @DisplayName("데이터 10만 개가 실제로 DB에 들어갔는지 검증한다.")
+    @DisplayName("Verify that 100,000 records are actually inserted into DB.")
     void verifyBulkInsert() {
-        // 1. 실행 전 개수 확인
+        // 1. Check count before execution
         long beforeCount = sellItemRepository.count();
-        System.out.println("삽입 전 총 개수: " + beforeCount);
+        System.out.println("Total count before insertion: " + beforeCount);
 
-        // 2. 10만 개 데이터 삽입
+        // 2. Insert 100,000 records
         dataSeederService.bulkInsertData(100000);
 
-        // 3. 실행 후 개수 확인
+        // 3. Check count after execution
         long afterCount = sellItemRepository.count();
-        System.out.println("삽입 후 총 개수: " + afterCount);
+        System.out.println("Total count after insertion: " + afterCount);
 
-        // 4. 검증: 정확히 10만 개가 늘었는지 확인
+        // 4. Verification: Ensure exactly 100,000 records were added
         assertThat(afterCount).isEqualTo(beforeCount + 100000);
 
-        // 5. 샘플 데이터 확인 (무작위 하나 가져오기)
+        // 5. Check sample data (Get one random)
         sellItemRepository.findAll(PageRequest.of(0, 1)).getContent().forEach(item -> {
-            System.out.println("데이터 샘플 - 이름: " + item.getItem().getName());
-            System.out.println("데이터 샘플 - 가격: " + item.getPrice());
-            System.out.println("데이터 샘플 - 판매량: " + item.getTotalSales());
+            System.out.println("Data Sample - Name: " + item.getItem().getName());
+            System.out.println("Data Sample - Price: " + item.getPrice());
+            System.out.println("Data Sample - Sales: " + item.getTotalSales());
         });
     }
 
     @Test
-    @DisplayName("성능 측정: JOIN + LIKE 검색(Naive)")
+    @DisplayName("Performance Measurement: JOIN + LIKE Search (Naive)")
     void searchNaiveTest() {
         String keyword = "product_999";
         StopWatch stopWatch = new StopWatch();
@@ -74,24 +74,24 @@ class ItemSearchPerformanceTest {
         List<SellItem> results = sellItemRepository.findByItemNameContaining(keyword);
 
         stopWatch.stop();
-        System.out.println("검색된 개수: " + results.size());
-        System.out.println("소요 시간: " + stopWatch.getTotalTimeMillis() + "ms");
+        System.out.println("Count found: " + results.size());
+        System.out.println("Elapsed time: " + stopWatch.getTotalTimeMillis() + "ms");
     }
 
     @Test
     void realPerformanceMeasurement() {
-        // 1. 데이터 10만 개 준비
+        // 1. Prepare 100,000 records
         dataSeederService.bulkInsertData(100_000);
 
         StopWatch sw = new StopWatch();
         String keyword = "Product_500000";
 
-        // [CASE 1] 단순 LIKE 검색
+        // [CASE 1] Simple LIKE Search
         sw.start("Simple LIKE Search");
         sellItemRepository.findByItemNameContaining(keyword);
         sw.stop();
 
-        // [CASE 2] 구매 많은 순 정렬 검색 (비정규화 필드 활용)
+        // [CASE 2] Search sorted by most purchases (Use denormalized fields)
         sw.start("Sorted by Sales (Optimized)");
         sellItemRepository.findAllByItemNameContainingOrderByTotalSalesDesc(keyword, PageRequest.of(0, 20));
         sw.stop();

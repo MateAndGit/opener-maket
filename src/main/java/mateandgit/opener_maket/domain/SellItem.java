@@ -85,7 +85,7 @@ public class SellItem {
     }
 
     public void applyNewRating(int newRating) {
-        // 새로운 평균 = (기존 평균 * 기존 참여수 + 새 점수) / (기존 참여수 + 1)
+        // New Average = (Old Average * Old Count + New Score) / (Old Count + 1)
         double totalScore = (this.averageRating * this.totalRatingCount) + newRating;
         this.totalRatingCount++;
         this.averageRating = totalScore / this.totalRatingCount;

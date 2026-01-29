@@ -33,9 +33,9 @@ public class Order {
 
     private LocalDateTime orderDate;
 
-    private BigDecimal totalAmount;         // 상품 총 합계 금액
-    private BigDecimal usedPoint;           // 이 주문에서 사용한 포인트
-    private BigDecimal actualPaymentAmount; // 실제 현금(Cash) 결제 금액
+    private BigDecimal totalAmount;         // Total amount of products
+    private BigDecimal usedPoint;           // Points used in this order
+    private BigDecimal actualPaymentAmount; // Actual cash payment amount
 
     @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
@@ -53,7 +53,7 @@ public class Order {
                 .orderDate(LocalDateTime.now())
                 .totalAmount(totalAmount)
                 .usedPoint(usedPoint)
-                .actualPaymentAmount(totalAmount.subtract(usedPoint)) // (총액 - 포인트)
+                .actualPaymentAmount(totalAmount.subtract(usedPoint)) // (Total Amount - Points)
                 .build();
 
         for (OrderItem orderItem : orderItems) {

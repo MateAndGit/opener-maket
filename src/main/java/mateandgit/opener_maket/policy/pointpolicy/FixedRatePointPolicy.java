@@ -17,22 +17,22 @@ public class FixedRatePointPolicy implements PointPolicy{
 
     @Override
     public void validatePointUsage(BigDecimal usePoint, BigDecimal userTotalPoint) {
-        // 1. 0원이면 검증 통과 (사용하지 않는 것으로 간주)
+        // 1. If 0, validation passes (considered unused)
         if (usePoint.compareTo(BigDecimal.ZERO) == 0) {
             return;
         }
 
-        // 2. 0보다 작은 마이너스 금액 방지
+        // 2. Prevent negative amounts less than 0
         if (usePoint.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Point usage cannot be negative");
         }
 
-        // 3. 최소 사용 단위 검증 (예: 1원 이상)
+        // 3. Validate minimum usage unit (e.g., 1 or more)
         if (usePoint.compareTo(BigDecimal.ONE) < 0) {
             throw new IllegalArgumentException("Minimum point usage is 1 point");
         }
 
-        // 4. 잔액 검증
+        // 4. Validate balance
         if (usePoint.compareTo(userTotalPoint) > 0) {
             throw new IllegalArgumentException("Insufficient point balance");
         }

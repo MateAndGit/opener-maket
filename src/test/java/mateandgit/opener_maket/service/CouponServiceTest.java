@@ -39,14 +39,14 @@ class CouponServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 1. 기존 데이터 싹 비우기 (매우 중요!)
+        // 1. Clear existing data (Very important!)
         userCouponRepository.deleteAllInBatch();
         userRepository.deleteAllInBatch();
         couponRepository.deleteAllInBatch();
 
-        // 2. 쿠폰 정책 저장 (ID가 1로 고정되지 않을 수 있으니 생성된 ID를 받아야 함)
+        // 2. Save coupon policy (Since ID might not be fixed to 1, retrieve the generated ID)
         Coupon coupon = Coupon.builder()
-                .name("선착순 100명 쿠폰")
+                .name("First-come, first-served 100 coupons")
                 .type(CouponType.ISSUE_LIMITED)
                 .totalQuantity(100)
                 .startDate(LocalDateTime.now().minusDays(1))
@@ -54,18 +54,18 @@ class CouponServiceTest {
                 .build();
         couponRepository.save(coupon);
 
-        // 3. 유저 300명 개별 생성 및 저장
+        // 3. Create and save 300 users individually
         for (int i = 0; i < 300; i++) {
             User user = User.builder()
-                    .email("test" + i + "@test.com") // 이메일 중복 방지
+                    .email("test" + i + "@test.com") // Prevent email duplication
                     .password("test_password")
                     .build();
-            userRepository.save(user); // 각각 세이브
+            userRepository.save(user); // Save each user
         }
     }
 
     @Test
-    @DisplayName("100개의 재고가 있을 떄 300명이 동시에 신청하면 딱 100명만 성공해야 한다.")
+    @DisplayName("When 300 users apply simultaneously for 100 coupons, exactly 100 should succeed.")
     void concurrency_test() throws InterruptedException {
         // given
         Long couponId = 1L;
@@ -98,18 +98,18 @@ class CouponServiceTest {
         // then
         Long issuedCount = redisTemplate.opsForSet().size(userSetKey);
 
-        System.out.println("최종 발급된 인원: " + issuedCount);
+        System.out.println("Total issued count: " + issuedCount);
         assertThat(issuedCount).isEqualTo(100);
     }
 
     @Test
-    @DisplayName("동시 발급 후 비동기로 DB에 100개가 모두 저장되어야 한다")
+    @DisplayName("All 100 coupons should be saved to DB asynchronously after concurrent issuance")
     void async_db_save_test() throws InterruptedException {
-        // DB에서 실제 생성된 ID 가져오기
+        // Retrieve the actual ID generated in DB
         Long realCouponId = couponRepository.findAll().get(0).getId();
         List<User> users = userRepository.findAll();
 
-        // Redis 초기화
+        // Initialize Redis
         redisTemplate.opsForValue().set("coupon:inventory:" + realCouponId, "100");
         redisTemplate.delete("coupon:users:" + realCouponId);
         userCouponRepository.deleteAllInBatch();
@@ -119,7 +119,7 @@ class CouponServiceTest {
         CountDownLatch latch = new CountDownLatch(threadCount);
 
         for (int i = 0; i < threadCount; i++) {
-            // 실제 DB에 있는 유저 ID를 순차적으로 전달
+            // Sequentially pass real user IDs from DB
             Long realUserId = users.get(i).getId();
             executorService.submit(() -> {
                 try {
@@ -131,11 +131,11 @@ class CouponServiceTest {
         }
         latch.await();
 
-        System.out.println("Redis 작업 완료. DB 저장을 위해 3초 대기합니다...");
+        System.out.println("Redis operation completed. Waiting 3 seconds for DB save...");
         Thread.sleep(3000);
 
         long dbCount = userCouponRepository.count();
-        System.out.println("최종 DB에 저장된 쿠폰 수: " + dbCount);
+        System.out.println("Final count saved in DB: " + dbCount);
 
         assertThat(dbCount).isEqualTo(100);
     }

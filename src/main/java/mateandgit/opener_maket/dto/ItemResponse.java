@@ -20,7 +20,7 @@ public record ItemResponse(
                 .sellItemId(sellItem.getId())
                 .itemName(sellItem.getItem().getName())
                 .description(sellItem.getItem().getDescription())
-                .price(sellItem.getPrice().longValue()) // BigDecimal 대응
+                .price(sellItem.getPrice().longValue()) // Handle BigDecimal
                 .stockQuantity(sellItem.getStockQuantity())
                 .averageRating(sellItem.getAverageRating())
                 .totalSales(sellItem.getTotalSales())

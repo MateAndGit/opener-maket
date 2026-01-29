@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  # 데이터베이스 서비스
+  # Database Service
   db:
     image: mysql:8.0
     restart: always
@@ -16,7 +16,7 @@ services:
     - "6379:6379"
     restart: always
 
-  # 스프링 부트 애플리케이션 서비스
+  # Spring Boot Application Service
   app:
     build: .
     ports:
