@@ -54,6 +54,3 @@ src/main/java/mateandgit/opener_maket
 | **Search Latency (1M rows)**   | 1.8s+               | < 0.5s              | **~72% Faster**  |
 | **Coupon Issuance Throughput** | Limited by DB Lock  | High (Redis Atomic) | **Non-blocking** |
 
-## 📝 License
-
-This project is licensed under the MIT License.
