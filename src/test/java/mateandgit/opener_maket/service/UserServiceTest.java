@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ActiveProfiles("test")
 @SpringBootTest
+@Transactional
 class UserServiceTest {
 
     @Autowired
@@ -24,14 +26,9 @@ class UserServiceTest {
     @Autowired
     UserRepository userRepository;
 
-    @BeforeEach
-    void tearDown() {
-        userRepository.deleteAll();
-    }
-
     @Test
-    @DisplayName("회원가입")
-    void 회원가입 () {
+    @DisplayName("Sign Up")
+    void signUp() {
         // given
         SingUpRequest request = new SingUpRequest("test@test.com", "password1234");
 
@@ -44,8 +41,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("중복 회원가입 시 예외가 발생해야 한다")
-    void 중복_회원가입_예외() {
+    @DisplayName("Should throw exception when signing up with duplicate email")
+    void duplicate_signup_exception() {
 
         SingUpRequest request = new SingUpRequest("duplicate@test.com", "1234");
         

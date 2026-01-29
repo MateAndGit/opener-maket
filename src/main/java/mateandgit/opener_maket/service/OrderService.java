@@ -32,7 +32,7 @@ public class OrderService {
     private final PointPolicy pointPolicy;
 
     /**
-     * 캐시 충전
+     * Charge Cash
      */
     public BigDecimal chargeCash(ChargeCashRequest request) {
         User user = userRepository.findByEmail(request.email())
@@ -44,13 +44,13 @@ public class OrderService {
     }
 
     /**
-     * 주문 생성 (포인트 사용 및 적립 포함)
+     * Create Order (Includes point usage and accumulation)
      */
     public Long createOrder(OrderRequest request) {
         User buyer = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("user not found"));
 
-        // 1. 재고 차감 및 주문 상품 생성 (비관적 락으로 동시성 제어)
+        // 1. Deduct stock and create order items (Concurrency control with Pessimistic Lock)
         List<OrderItem> orderItems = request.orderItems().stream().map(dto -> {
             SellItem sellItem = sellItemRepository.findByIdWithPessimisticLock(dto.sellItemId())
                     .orElseThrow(() -> new IllegalArgumentException("sell item not found"));
@@ -59,33 +59,33 @@ public class OrderService {
             return OrderItem.createOrderItem(sellItem, dto.count());
         }).toList();
 
-        // 2. 전체 주문 금액 계산
+        // 2. Calculate total order amount
         BigDecimal totalSum = orderItems.stream()
                 .map(item -> item.getOrderPrice().multiply(BigDecimal.valueOf(item.getCount())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 3. 포인트 사용 처리
+        // 3. Process point usage
         BigDecimal usedPoint = request.point();
         if (usedPoint.compareTo(BigDecimal.ZERO) > 0) {
             pointPolicy.validatePointUsage(usedPoint, buyer.getPoint());
             buyer.deductPoint(usedPoint);
         } else {
-            usedPoint = BigDecimal.ZERO; // 0원 이하일 경우 확실히 0으로 세팅
+            usedPoint = BigDecimal.ZERO; // Set to 0 if less than or equal to 0
         }
-        // 4. 실제 현금 결제 및 포인트 적립
+        // 4. Actual cash payment and point accumulation
         BigDecimal actualCash = totalSum.subtract(usedPoint);
         buyer.withdrawCash(actualCash);
 
         BigDecimal reward = pointPolicy.calculateRewardPoints(actualCash);
         buyer.earnPoint(reward);
 
-        // 5. 주문 생성 및 저장
+        // 5. Create and save order
         Order order = Order.createOrder(buyer, orderItems, totalSum, usedPoint);
         return orderRepository.save(order).getId();
     }
 
     /**
-     * 주문 확정 (판매자 정산)
+     * Confirm Order (Seller Settlement)
      */
     public void confirmOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
@@ -104,18 +104,18 @@ public class OrderService {
             BigDecimal commission = commissionPolicy.policy(itemTotal);
             BigDecimal finalAmount = itemTotal.subtract(commission);
 
-            seller.depositCash(finalAmount); // 판매 대금 입금
+            seller.depositCash(finalAmount); // Deposit sales proceeds
         }
     }
 
     /**
-     * 주문 취소 (재고 복구 및 포인트 회수)
+     * Cancel Order (Restore stock and reclaim points)
      */
     public void cancelOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("order not found"));
 
-        // 1. 상태 검증
+        // 1. Validate status
         if (order.getStatus() == SHIPPING || order.getStatus() == ORDER_CONFIRMED || order.getStatus() == CANCELED) {
             throw new IllegalArgumentException("order is already canceled or confirmed");
         }
@@ -123,18 +123,18 @@ public class OrderService {
         order.updateStatus(CANCELED);
         User buyer = order.getUser();
 
-        // 2. 재고 복구
+        // 2. Restore stock
         order.getOrderItems().forEach(item ->
                 item.getSellItem().addStock(item.getCount())
         );
 
-        // 3. 포인트 롤백
-        buyer.earnPoint(order.getUsedPoint()); // 썼던 포인트 복구(적립)
+        // 3. Rollback points
+        buyer.earnPoint(order.getUsedPoint()); // Restore used points (Earn)
 
         BigDecimal rewardToRecover = pointPolicy.calculateRewardPoints(order.getActualPaymentAmount());
-        buyer.deductPoint(rewardToRecover); // 적립됐던 포인트 회수(차감)
+        buyer.deductPoint(rewardToRecover); // Reclaim earned points (Deduct)
 
-        // 4. 현금 환불
-        buyer.depositCash(order.getActualPaymentAmount()); // 결제액 입금
+        // 4. Refund cash
+        buyer.depositCash(order.getActualPaymentAmount()); // Deposit payment amount
     }
 }

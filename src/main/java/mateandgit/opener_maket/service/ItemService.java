@@ -45,7 +45,7 @@ public class ItemService {
 
     public List<ItemResponse> searchItems(String keyword, String sortBy) {
         if (keyword == null || keyword.trim().length() < 2) {
-            throw new IllegalArgumentException("검색어는 2글자 이상이어야 합니다.");
+            throw new IllegalArgumentException("Search keyword must be at least 2 characters.");
         }
 
         List<SellItem> results = sellItemRepositoryCustom.searchProducts(keyword, sortBy);

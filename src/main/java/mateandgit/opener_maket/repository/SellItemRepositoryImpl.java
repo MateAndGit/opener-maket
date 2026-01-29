@@ -36,11 +36,11 @@ public class SellItemRepositoryImpl implements SellItemRepositoryCustom{
         if (sortType == null) return sellItem.id.desc();
 
         return switch (sortType) {
-            case "sales" -> sellItem.totalSales.desc();     // 구매 많은 순
-            case "rating" -> sellItem.averageRating.desc(); // 별점 높은 순
-            case "price_asc" -> sellItem.price.asc();       // 가격 낮은 순
-            case "price_desc" -> sellItem.price.desc();     // 가격 높은 순
-            default -> sellItem.id.desc();                  // 최신 순
+            case "sales" -> sellItem.totalSales.desc();     // Most purchases
+            case "rating" -> sellItem.averageRating.desc(); // Highest rating
+            case "price_asc" -> sellItem.price.asc();       // Lowest price
+            case "price_desc" -> sellItem.price.desc();     // Highest price
+            default -> sellItem.id.desc();                  // Newest
         };
     }
 }

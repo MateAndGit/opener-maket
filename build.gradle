@@ -50,7 +50,7 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-// Querydsl QClass 생성 위치 지정
+// Define Querydsl QClass generation location
 def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
 
 sourceSets {
@@ -61,7 +61,7 @@ tasks.withType(JavaCompile).configureEach {
 	options.getGeneratedSourceOutputDirectory().set(querydslDir)
 }
 
-// clean 시 생성된 QClass 삭제
+// Delete generated QClass on clean
 clean {
 	delete file(querydslDir)
 }

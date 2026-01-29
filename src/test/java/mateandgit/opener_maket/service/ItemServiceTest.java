@@ -58,15 +58,15 @@ class ItemServiceTest {
     }
 
     @Test
-    @DisplayName("상품을 등록 성공")
-    void 상품_등록_테스트() {
+    @DisplayName("Item registration success")
+    void shouldRegisterItem() {
 
         // given
         AddItemRequest request = new AddItemRequest(
                 "test@test.com",
                 BOOK,
-                "해리포터",
-                "마법사의 돌 버전입니다.",
+                "Harry Potter",
+                "Harry Potter and the Sorcerer's Stone version.",
                 new BigDecimal("2000"),
                 50
 
@@ -79,18 +79,18 @@ class ItemServiceTest {
         SellItem sellItem = sellItemRepository.findById(sellItemId).get();
 //        assertThat(sellItem.getUser().getEmail()).isEqualTo("test@test.com");
 //        assertThat(sellItem.getItem().getCategory().getCategoryStatus()).isEqualTo(BOOK);
-//        assertThat(sellItem.getItem().getName()).isEqualTo("해리포터");
-//        assertThat(sellItem.getItem().getDescription()).isEqualTo("마법사의 돌 버전입니다.");
+//        assertThat(sellItem.getItem().getName()).isEqualTo("Harry Potter");
+//        assertThat(sellItem.getItem().getDescription()).isEqualTo("Harry Potter and the Sorcerer's Stone version.");
 //        assertThat(sellItem.getPrice()).isEqualTo(1000);
 //        assertThat(sellItem.getStockQuantity()).isEqualTo(50);
 
         assertThat(sellItem)
                 .extracting("price", "stockQuantity")
-                .containsExactly(1000, 50);
+                .containsExactly(new BigDecimal("2000"), 50);
 
         assertThat(sellItem.getItem())
                 .extracting("name", "description")
-                .containsExactly("해리포터", "마법사의 돌 버전입니다.");
+                .containsExactly("Harry Potter", "Harry Potter and the Sorcerer's Stone version.");
     }
 
 }

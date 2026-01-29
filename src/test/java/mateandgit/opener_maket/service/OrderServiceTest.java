@@ -56,8 +56,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("누적 충전을 하면 기존에 캐시에서 추가로 충전된다.")
-    void 누적_충전_캐시() {
+    @DisplayName("Accumulated charge adds to existing cash.")
+    void chargeCashAccumulation() {
         // when
 
         SingUpRequest signUp = new SingUpRequest("test@test.com", "password1234");
@@ -68,25 +68,25 @@ class OrderServiceTest {
         BigDecimal depositAmount2 = new BigDecimal("10000");
         ChargeCashRequest cashRequest2 = new ChargeCashRequest("test@test.com", depositAmount2);
 
-        BigDecimal returnedCash = orderService.chargeCash(cashRequest);  // 첫 충전 후 잔액: 10,000
-        BigDecimal returnedCash2 = orderService.chargeCash(cashRequest2); // 두 번째 충전 후 잔액: 20,000
+        BigDecimal returnedCash = orderService.chargeCash(cashRequest);  // Balance after first charge: 10,000
+        BigDecimal returnedCash2 = orderService.chargeCash(cashRequest2); // Balance after second charge: 20,000
 
         // then
-        // 1. 첫 번째 충전 후 반환값 확인
+        // 1. Verify return value after first charge
         assertThat(returnedCash).isEqualByComparingTo(new BigDecimal("10000"));
 
-        // 2. 두 번째 충전 후 반환값 확인 (여기가 20,000원이어야 함!)
+        // 2. Verify return value after second charge (should be 20,000)
         assertThat(returnedCash2).isEqualByComparingTo(new BigDecimal("20000"));
 
-        // 3. 최종 DB 상태 확인
+        // 3. Verify final DB state
         User findUser = userRepository.findById(userId).orElseThrow();
         assertThat(findUser.getCash()).isEqualByComparingTo(new BigDecimal("20000"));
     }
 
     @Test
-    @DisplayName("주문을 생성하면 재고와 캐시가 차감되고 포인트가 적립된다.")
+    @DisplayName("Creating an order deducts stock and cash, and earns points.")
     void createOrder() {
-        // 1. given: 구매자, 판매자, 상품 세팅
+        // 1. given: Buyer, Seller, Item setup
         SingUpRequest buyerSignUp = new SingUpRequest("buyer@test.com", "password123");
         SingUpRequest sellerSignUp = new SingUpRequest("seller@test.com", "password123");
         Long buyerId = userService.join(buyerSignUp);
@@ -96,7 +96,7 @@ class OrderServiceTest {
 
         Category category = categoryRepository.save(Category.builder().categoryStatus(FOOD).build());
 
-        AddItemRequest itemRequest = new AddItemRequest("seller@test.com", FOOD, "사과", "맛있는 사과", new BigDecimal("10000"), 10);
+        AddItemRequest itemRequest = new AddItemRequest("seller@test.com", FOOD, "Apple", "Delicious Apple", new BigDecimal("10000"), 10);
         Item item = itemRepository.save(Item.createItem(itemRequest, category));
 
         User seller = userRepository.findById(sellerId).orElseThrow();
@@ -106,80 +106,80 @@ class OrderServiceTest {
         OrderRequest orderRequest = new OrderRequest(
                 "buyer@test.com",
                 List.of(new OrderItemRequest(apple.getId(), 3)),
-                new BigDecimal("30000"), // 클라이언트가 계산해서 보낸 총액
-                BigDecimal.ZERO          // 사용할 포인트
+                new BigDecimal("30000"), // Total amount calculated by client
+                BigDecimal.ZERO          // Points to use
         );
 
         // 2. when
         Long orderId = orderService.createOrder(orderRequest);
 
         // 3. then
-        // (재고 7개 확인, 캐시 20,000원 확인, 포인트 750원 확인)
+        // (Verify stock 7, Cash 20,000, Point 750)
         User findBuyer = userRepository.findById(buyerId).orElseThrow();
         assertThat(findBuyer.getCash()).isEqualByComparingTo(new BigDecimal("20000"));
         assertThat(findBuyer.getPoint()).isEqualByComparingTo(new BigDecimal("750"));
     }
 
     @Test
-    @DisplayName("포인트를 사용해 주문하면, 사용한 만큼 캐시가 덜 차감되고 실결제액 기준으로 포인트가 적립된다.")
+    @DisplayName("Ordering with points deducts less cash and earns points based on actual payment amount.")
     void createOrderWithPoints() {
-        // 1. Given: 구매자 생성 및 5만 원 충전
+        // 1. Given: Create buyer and charge 50,000
         String email = "pointuser@test.com";
         SingUpRequest buyerSignUp = new SingUpRequest(email, "pass1234");
         Long buyerId = userService.join(buyerSignUp);
 
-        // 현금 50,000원 충전
+        // Charge cash 50,000
         orderService.chargeCash(new ChargeCashRequest(email, new BigDecimal("50000")));
 
-        // 2. 포인트 5,000원 강제 적립
-        // 서비스 메서드가 없다면 repository에서 직접 가져와서 업데이트 후 flush
+        // 2. Force earn 5,000 points
+        // If no service method, get from repository, update and flush
         User buyer = userRepository.findById(buyerId).orElseThrow();
         buyer.earnPoint(new BigDecimal("5000"));
-        userRepository.saveAndFlush(buyer); // DB에 즉시 반영
+        userRepository.saveAndFlush(buyer); // Reflect in DB immediately
 
-        // 3. 상품 등록 (30,000원짜리 사과)
+        // 3. Register Item (Apple worth 30,000)
         Category category = categoryRepository.save(Category.builder().categoryStatus(CategoryStatus.FOOD).build());
 
         AddItemRequest itemReq = new AddItemRequest(
                 "seller@test.com",
                 CategoryStatus.FOOD,
-                "사과",
-                "맛있는 사과",
+                "Apple",
+                "Delicious Apple",
                 new BigDecimal("30000"),
                 10
         );
 
         Item item = itemRepository.save(Item.createItem(itemReq, category));
 
-        // 판매자 임의 생성 (간결함을 위해 buyer를 seller로 활용하거나 별도 생성)
+        // Create arbitrary seller (using buyer as seller for brevity or create separate)
         SellItem apple = sellItemRepository.save(SellItem.createSellItem(itemReq, buyer, item));
 
-        // 4. 주문 요청 생성
+        // 4. Create Order Request
         // (email, orderItems, totalPrice, point)
         OrderRequest orderRequest = new OrderRequest(
                 email,
-                List.of(new OrderItemRequest(apple.getId(), 1)), // 30,000원 1개
+                List.of(new OrderItemRequest(apple.getId(), 1)), // 30,000 x 1
                 new BigDecimal("30000"),
-                new BigDecimal("5000") // 포인트 5,000원 사용!
+                new BigDecimal("5000") // Use 5,000 points!
         );
 
-        // 5. When: 주문 실행
+        // 5. When: Execute Order
         orderService.createOrder(orderRequest);
 
-        // 6. Then: 결과 검증
+        // 6. Then: Verify Result
         User updatedBuyer = userRepository.findById(buyerId).orElseThrow();
 
-        // (1) 캐시 검증: 50,000 - (30,000 - 5,000) = 25,000
+        // (1) Cash verification: 50,000 - (30,000 - 5,000) = 25,000
         assertThat(updatedBuyer.getCash())
-                .as("사용한 포인트만큼 캐시가 적게 차감되어야 함")
+                .as("Cash should be deducted less by the amount of points used")
                 .isEqualByComparingTo(new BigDecimal("25000"));
 
-        // (2) 포인트 검증: (기존 5,000 - 사용 5,000) + 적립(25,000 * 0.025 = 625)
+        // (2) Point verification: (Existing 5,000 - Used 5,000) + Earned (25,000 * 0.025 = 625)
         assertThat(updatedBuyer.getPoint())
-                .as("포인트 사용 후 실결제액 기준 적립금이 합산되어야 함")
+                .as("Points should be accumulated based on actual payment amount after using points")
                 .isEqualByComparingTo(new BigDecimal("625"));
 
-        // (3) 재고 검증: 10 - 1 = 9
+        // (3) Stock verification: 10 - 1 = 9
         SellItem updatedItem = sellItemRepository.findById(apple.getId()).orElseThrow();
         assertThat(updatedItem.getStockQuantity()).isEqualTo(9);
     }

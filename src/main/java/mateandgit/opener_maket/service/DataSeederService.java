@@ -18,34 +18,34 @@ public class DataSeederService {
     private final JdbcTemplate jdbcTemplate;
 
     public void bulkInsertData(int count) {
-        // 1. Item 테이블에 10만 개 삽입 (이름 검색용)
+        // 1. Insert 100,000 records into Item table (For name search)
         String itemSql = "INSERT INTO item (item_id, name, description, category_id) VALUES (?, ?, ?, ?)";
         jdbcTemplate.batchUpdate(itemSql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, i + 1L);
-                ps.setString(2, "Product_" + i); // 검색 키워드
+                ps.setString(2, "Product_" + i); // Search keyword
                 ps.setString(3, "Description for Product_" + i);
-                ps.setLong(4, 1L); // 미리 생성된 카테고리 ID
+                ps.setLong(4, 1L); // Pre-created Category ID
             }
             @Override
             public int getBatchSize() { return count; }
         });
 
-        // 2. SellItem 테이블에 10만 개 삽입 (정렬 및 필터링용)
+        // 2. Insert 100,000 records into SellItem table (For sorting and filtering)
         String sellItemSql = "INSERT INTO sell_item (sell_item_id, item_id, user_id, price, stock_quantity, deal_status, average_rating, total_sales) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.batchUpdate(sellItemSql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, i + 1L);
-                ps.setLong(2, i + 1L); // Item ID 매칭
-                ps.setLong(3, 1L);    // 판매자 ID (미리 생성된 User ID)
+                ps.setLong(2, i + 1L); // Match Item ID
+                ps.setLong(3, 1L);    // Seller ID (Pre-created User ID)
                 ps.setBigDecimal(4, BigDecimal.valueOf(1000 + (Math.random() * 90000)));
                 ps.setInt(5, 100);
                 ps.setString(6, "SALE");
-                ps.setDouble(7, Math.random() * 5); // 별점
-                ps.setInt(8, (int) (Math.random() * 10000)); // 판매량
+                ps.setDouble(7, Math.random() * 5); // Rating
+                ps.setInt(8, (int) (Math.random() * 10000)); // Sales volume
             }
             @Override
             public int getBatchSize() { return count; }

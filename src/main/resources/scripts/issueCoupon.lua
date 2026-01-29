@@ -1,20 +1,20 @@
--- KEYS: [쿠폰재고키, 쿠폰별유저셋, 이벤트통합유저셋]
+-- KEYS: [coupon_stock_key, coupon_user_set, event_integrated_user_set]
 -- ARGV: [userId]
 
--- 1. 이벤트 통합 중복 확인 (이 이벤트에서 다른 쿠폰 받은 적 있나?)
+-- 1. Check event integrated duplication (Have you received another coupon from this event?)
 if redis.call('SISMEMBER', KEYS[3], ARGV[1]) == 1 then
-    return -3 -- 에러코드: "이미 이 이벤트의 쿠폰을 하나 보유 중입니다."
+    return -3 -- Error Code: "You already hold a coupon from this event."
 end
 
--- 2. 재고 확인
+-- 2. Check stock
 local stock = tonumber(redis.call('GET', KEYS[1]) or "0")
 if stock <= 0 then
-    return -2 -- 에러코드: "선착순 마감"
+    return -2 -- Error Code: "First-come-first-served ended"
 end
 
--- 3. 처리 (원자적 실행)
+-- 3. Process (Atomic execution)
 redis.call('DECR', KEYS[1])
-redis.call('SADD', KEYS[2], ARGV[1]) -- 이 쿠폰 받은 유저 저장
-redis.call('SADD', KEYS[3], ARGV[1]) -- 이 이벤트 참여자로 저장 (락 역할)
+redis.call('SADD', KEYS[2], ARGV[1]) -- Save user who received this coupon
+redis.call('SADD', KEYS[3], ARGV[1]) -- Save as event participant (Lock role)
 
 return 1
