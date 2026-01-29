@@ -58,7 +58,7 @@ class CouponServiceTest {
         for (int i = 0; i < 300; i++) {
             User user = User.builder()
                     .email("test" + i + "@test.com") // 이메일 중복 방지
-                    .password("!2345")
+                    .password("test_password")
                     .build();
             userRepository.save(user); // 각각 세이브
         }
