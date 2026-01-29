@@ -47,6 +47,9 @@ src/main/java/mateandgit/opener_maket
 └── OpenerMaketApplication.java
 ```
 
+## 🏗 System Architecture
+![System Architecture](./docs/images/image.png)
+
 ## 📈 Performance Improvements
 
 | Metric                         | Before Optimization | After Optimization  | Improvement      |
